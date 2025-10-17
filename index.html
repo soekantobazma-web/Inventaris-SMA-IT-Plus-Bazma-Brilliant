@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventaris Buku dan Barang SMA IT Plus Bazma Brilliant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="h-full bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
+    <div class="min-h-full p-6">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-800 mb-2">📚 Inventaris Buku dan Barang SMA IT Plus Bazma Brilliant</h1>
+            <p class="text-gray-600">Kelola buku dan barang sekolah dengan mudah</p>
+        </header>
+
+        <main class="max-w-6xl mx-auto">
+            <!-- Form Input -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Tambah Item Baru</h2>
+                <form id="itemForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                    <div>
+                        <label for="itemType" class="block text-sm font-medium text-gray-700 mb-2">Jenis Item</label>
+                        <select id="itemType" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                            <option value="">Pilih Jenis</option>
+                            <option value="Buku">📚 Buku</option>
+                            <option value="Barang">📦 Barang</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="itemName" class="block text-sm font-medium text-gray-700 mb-2">Nama Item</label>
+                        <input type="text" id="itemName" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                               placeholder="Contoh: Buku Matematika">
+                    </div>
+                    <div>
+                        <label for="itemQuantity" class="block text-sm font-medium text-gray-700 mb-2">Jumlah</label>
+                        <input type="number" id="itemQuantity" required min="1"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                               placeholder="0">
+                    </div>
+                    <div>
+                        <label for="itemPrice" class="block text-sm font-medium text-gray-700 mb-2">Harga (Rp)</label>
+                        <input type="number" id="itemPrice" required min="0"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                               placeholder="0">
+                    </div>
+                    <div>
+                        <label for="itemLocation" class="block text-sm font-medium text-gray-700 mb-2">Posisi/Lokasi</label>
+                        <input type="text" id="itemLocation" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                               placeholder="Contoh: Rak A-1">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" 
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                            <span>➕</span> Tambah Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Filter dan Pencarian -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex flex-col md:flex-row gap-4 items-center">
+                    <div class="flex-1">
+                        <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-2">Cari Item</label>
+                        <input type="text" id="searchInput" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                               placeholder="Cari berdasarkan nama atau lokasi...">
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                        <select id="filterType" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors border-0">
+                            <option value="">Semua Jenis</option>
+                            <option value="Buku">📚 Buku</option>
+                            <option value="Barang">📦 Barang</option>
+                        </select>
+                        <button id="sortByName" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                            📝 Urutkan Nama
+                        </button>
+                        <button id="sortByPrice" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                            💰 Urutkan Harga
+                        </button>
+                        <button id="exportExcel" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                            📊 Download Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistik -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-indigo-600" id="totalItems">0</div>
+                    <div class="text-gray-600">Total Item</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-green-600" id="totalQuantity">0</div>
+                    <div class="text-gray-600">Total Jumlah</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-purple-600" id="totalValue">Rp 0</div>
+                    <div class="text-gray-600">Total Nilai</div>
+                </div>
+            </div>
+
+            <!-- Tabel Data -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">Daftar Item</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Item</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posisi</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr id="emptyState">
+                                <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                                    <div class="text-6xl mb-4">📦</div>
+                                    <div class="text-lg">Belum ada item yang ditambahkan</div>
+                                    <div class="text-sm">Mulai dengan menambahkan item pertama Anda</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Edit -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Edit Item</h3>
+            <form id="editForm">
+                <div class="space-y-4">
+                    <div>
+                        <label for="editType" class="block text-sm font-medium text-gray-700 mb-2">Jenis Item</label>
+                        <select id="editType" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Pilih Jenis</option>
+                            <option value="Buku">📚 Buku</option>
+                            <option value="Barang">📦 Barang</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="editName" class="block text-sm font-medium text-gray-700 mb-2">Nama Item</label>
+                        <input type="text" id="editName" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="editQuantity" class="block text-sm font-medium text-gray-700 mb-2">Jumlah</label>
+                        <input type="number" id="editQuantity" required min="1"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="editPrice" class="block text-sm font-medium text-gray-700 mb-2">Harga (Rp)</label>
+                        <input type="number" id="editPrice" required min="0"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="editLocation" class="block text-sm font-medium text-gray-700 mb-2">Posisi/Lokasi</label>
+                        <input type="text" id="editLocation" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button type="button" id="cancelEdit" 
+                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class SchoolInventory {
+            constructor() {
+                this.items = JSON.parse(localStorage.getItem('schoolItems')) || [];
+                this.editingIndex = -1;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.renderTable();
+                this.updateStats();
+            }
+
+            bindEvents() {
+                document.getElementById('itemForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addItem();
+                });
+
+                document.getElementById('editForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveEdit();
+                });
+
+                document.getElementById('cancelEdit').addEventListener('click', () => {
+                    this.closeEditModal();
+                });
+
+                document.getElementById('editModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'editModal') {
+                        this.closeEditModal();
+                    }
+                });
+
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.filterItems(e.target.value);
+                });
+
+                document.getElementById('sortByName').addEventListener('click', () => {
+                    this.sortItems('name');
+                });
+
+                document.getElementById('sortByPrice').addEventListener('click', () => {
+                    this.sortItems('price');
+                });
+
+                document.getElementById('exportExcel').addEventListener('click', () => {
+                    this.exportToExcel();
+                });
+
+                document.getElementById('filterType').addEventListener('change', (e) => {
+                    this.filterByType(e.target.value);
+                });
+            }
+
+            addItem() {
+                const type = document.getElementById('itemType').value.trim();
+                const name = document.getElementById('itemName').value.trim();
+                const quantity = parseInt(document.getElementById('itemQuantity').value);
+                const price = parseInt(document.getElementById('itemPrice').value);
+                const location = document.getElementById('itemLocation').value.trim();
+
+                if (!type || !name || !quantity || !price || !location) {
+                    this.showMessage('Mohon lengkapi semua field!', 'error');
+                    return;
+                }
+
+                const newItem = {
+                    id: Date.now(),
+                    type,
+                    name,
+                    quantity,
+                    price,
+                    location,
+                    dateAdded: new Date().toLocaleDateString('id-ID')
+                };
+
+                this.items.push(newItem);
+                this.saveToStorage();
+                this.renderTable();
+                this.updateStats();
+                this.clearForm();
+                this.showMessage('Item berhasil ditambahkan!', 'success');
+            }
+
+            editItem(index) {
+                this.editingIndex = index;
+                const item = this.items[index];
+                
+                document.getElementById('editType').value = item.type || '';
+                document.getElementById('editName').value = item.name;
+                document.getElementById('editQuantity').value = item.quantity;
+                document.getElementById('editPrice').value = item.price;
+                document.getElementById('editLocation').value = item.location;
+                
+                document.getElementById('editModal').classList.remove('hidden');
+                document.getElementById('editModal').classList.add('flex');
+            }
+
+            saveEdit() {
+                if (this.editingIndex === -1) return;
+
+                const type = document.getElementById('editType').value.trim();
+                const name = document.getElementById('editName').value.trim();
+                const quantity = parseInt(document.getElementById('editQuantity').value);
+                const price = parseInt(document.getElementById('editPrice').value);
+                const location = document.getElementById('editLocation').value.trim();
+
+                if (!type || !name || !quantity || !price || !location) {
+                    this.showMessage('Mohon lengkapi semua field!', 'error');
+                    return;
+                }
+
+                this.items[this.editingIndex] = {
+                    ...this.items[this.editingIndex],
+                    type,
+                    name,
+                    quantity,
+                    price,
+                    location
+                };
+
+                this.saveToStorage();
+                this.renderTable();
+                this.updateStats();
+                this.closeEditModal();
+                this.showMessage('Item berhasil diperbarui!', 'success');
+            }
+
+            deleteItem(index) {
+                const item = this.items[index];
+                
+                // Create custom confirmation dialog
+                const confirmDiv = document.createElement('div');
+                confirmDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                confirmDiv.innerHTML = `
+                    <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Konfirmasi Hapus</h3>
+                        <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus item "${item.name}"?</p>
+                        <div class="flex gap-3">
+                            <button id="confirmCancel" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Batal
+                            </button>
+                            <button id="confirmDelete" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(confirmDiv);
+                
+                document.getElementById('confirmCancel').addEventListener('click', () => {
+                    document.body.removeChild(confirmDiv);
+                });
+                
+                document.getElementById('confirmDelete').addEventListener('click', () => {
+                    this.items.splice(index, 1);
+                    this.saveToStorage();
+                    this.renderTable();
+                    this.updateStats();
+                    this.showMessage('Item berhasil dihapus!', 'success');
+                    document.body.removeChild(confirmDiv);
+                });
+            }
+
+            exportToExcel() {
+                if (this.items.length === 0) {
+                    this.showMessage('Tidak ada data untuk diekspor!', 'error');
+                    return;
+                }
+
+                // Prepare data for Excel
+                const excelData = [];
+                
+                // Add header with school info
+                excelData.push(['INVENTARIS BUKU DAN BARANG']);
+                excelData.push(['SMA IT PLUS BAZMA BRILLIANT']);
+                excelData.push(['']);
+                excelData.push(['Tanggal Export:', new Date().toLocaleDateString('id-ID')]);
+                excelData.push(['Total Item:', this.items.length]);
+                excelData.push(['Total Jumlah:', this.items.reduce((sum, item) => sum + item.quantity, 0)]);
+                excelData.push(['Total Nilai:', 'Rp ' + this.items.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString('id-ID')]);
+                excelData.push(['']);
+                
+                // Add table headers
+                excelData.push(['No', 'Jenis', 'Nama Item', 'Jumlah', 'Harga (Rp)', 'Total Nilai (Rp)', 'Posisi/Lokasi', 'Tanggal Ditambah']);
+                
+                // Add data rows
+                this.items.forEach((item, index) => {
+                    const total = item.quantity * item.price;
+                    excelData.push([
+                        index + 1,
+                        item.type || 'Tidak diketahui',
+                        item.name,
+                        item.quantity,
+                        item.price,
+                        total,
+                        item.location,
+                        item.dateAdded
+                    ]);
+                });
+
+                // Create workbook and worksheet
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 5 },   // No
+                    { wch: 10 },  // Jenis
+                    { wch: 25 },  // Nama Item
+                    { wch: 10 },  // Jumlah
+                    { wch: 15 },  // Harga
+                    { wch: 15 },  // Total
+                    { wch: 15 },  // Posisi
+                    { wch: 15 }   // Tanggal
+                ];
+
+                // Style the header
+                const headerStyle = {
+                    font: { bold: true, sz: 14 },
+                    alignment: { horizontal: 'center' },
+                    fill: { fgColor: { rgb: 'E3F2FD' } }
+                };
+
+                // Apply styles to title rows
+                if (ws['A1']) ws['A1'].s = { font: { bold: true, sz: 16 }, alignment: { horizontal: 'center' } };
+                if (ws['A2']) ws['A2'].s = { font: { bold: true, sz: 14 }, alignment: { horizontal: 'center' } };
+
+                // Apply styles to data header row (row 9)
+                const headerRow = 9;
+                ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].forEach(col => {
+                    const cellRef = col + headerRow;
+                    if (ws[cellRef]) {
+                        ws[cellRef].s = headerStyle;
+                    }
+                });
+
+                // Merge title cells
+                ws['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }, // Title
+                    { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } }  // School name
+                ];
+
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'Inventaris');
+
+                // Generate filename with current date
+                const currentDate = new Date().toISOString().split('T')[0];
+                const filename = `Inventaris_SMA_IT_Plus_Bazma_Brilliant_${currentDate}.xlsx`;
+
+                // Save file
+                XLSX.writeFile(wb, filename);
+                
+                this.showMessage('File Excel berhasil didownload!', 'success');
+            }
+
+            closeEditModal() {
+                document.getElementById('editModal').classList.add('hidden');
+                document.getElementById('editModal').classList.remove('flex');
+                this.editingIndex = -1;
+            }
+
+            filterByType(selectedType) {
+                const rows = document.querySelectorAll('#itemTableBody tr:not(#emptyState)');
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const typeCell = row.cells[1]; // Kolom jenis adalah kolom ke-2 (index 1)
+                    const itemType = typeCell ? typeCell.textContent.trim() : '';
+                    
+                    const isVisible = !selectedType || itemType.includes(selectedType);
+                    row.style.display = isVisible ? '' : 'none';
+                    if (isVisible) visibleCount++;
+                });
+
+                const emptyState = document.getElementById('emptyState');
+                if (visibleCount === 0 && this.items.length > 0) {
+                    emptyState.style.display = '';
+                    emptyState.innerHTML = `
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                            <div class="text-6xl mb-4">🔍</div>
+                            <div class="text-lg">Tidak ada item ${selectedType} yang ditemukan</div>
+                            <div class="text-sm">Coba pilih jenis yang berbeda</div>
+                        </td>
+                    `;
+                } else {
+                    emptyState.style.display = 'none';
+                }
+            }
+
+            filterItems(searchTerm) {
+                const rows = document.querySelectorAll('#itemTableBody tr:not(#emptyState)');
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const isVisible = text.includes(searchTerm.toLowerCase());
+                    row.style.display = isVisible ? '' : 'none';
+                    if (isVisible) visibleCount++;
+                });
+
+                const emptyState = document.getElementById('emptyState');
+                if (visibleCount === 0 && this.items.length > 0) {
+                    emptyState.style.display = '';
+                    emptyState.innerHTML = `
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                            <div class="text-6xl mb-4">🔍</div>
+                            <div class="text-lg">Tidak ada item yang cocok</div>
+                            <div class="text-sm">Coba kata kunci yang berbeda</div>
+                        </td>
+                    `;
+                } else {
+                    emptyState.style.display = 'none';
+                }
+            }
+
+            sortItems(by) {
+                if (by === 'name') {
+                    this.items.sort((a, b) => a.name.localeCompare(b.name));
+                } else if (by === 'price') {
+                    this.items.sort((a, b) => b.price - a.price);
+                }
+                this.saveToStorage();
+                this.renderTable();
+                this.showMessage(`Items diurutkan berdasarkan ${by === 'name' ? 'nama' : 'harga'}!`, 'success');
+            }
+
+            renderTable() {
+                const tbody = document.getElementById('itemTableBody');
+                const emptyState = document.getElementById('emptyState');
+
+                if (this.items.length === 0) {
+                    emptyState.style.display = '';
+                    // Remove all other rows
+                    const rows = tbody.querySelectorAll('tr:not(#emptyState)');
+                    rows.forEach(row => row.remove());
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+
+                // Remove existing rows except empty state
+                const existingRows = tbody.querySelectorAll('tr:not(#emptyState)');
+                existingRows.forEach(row => row.remove());
+
+                this.items.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 fade-in';
+                    
+                    const total = item.quantity * item.price;
+                    
+                    const typeIcon = item.type === 'Buku' ? '📚' : '📦';
+                    const typeColor = item.type === 'Buku' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800';
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${index + 1}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColor}">
+                                ${typeIcon} ${item.type || 'Tidak diketahui'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${item.name}</div>
+                            <div class="text-sm text-gray-500">Ditambah: ${item.dateAdded}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.quantity}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Rp ${item.price.toLocaleString('id-ID')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Rp ${total.toLocaleString('id-ID')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                📍 ${item.location}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="inventory.editItem(${index})" 
+                                    class="text-indigo-600 hover:text-indigo-900 mr-3 transition-colors">
+                                ✏️ Edit
+                            </button>
+                            <button onclick="inventory.deleteItem(${index})" 
+                                    class="text-red-600 hover:text-red-900 transition-colors">
+                                🗑️ Hapus
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+
+            updateStats() {
+                const totalItems = this.items.length;
+                const totalQuantity = this.items.reduce((sum, item) => sum + item.quantity, 0);
+                const totalValue = this.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+
+                document.getElementById('totalItems').textContent = totalItems;
+                document.getElementById('totalQuantity').textContent = totalQuantity;
+                document.getElementById('totalValue').textContent = `Rp ${totalValue.toLocaleString('id-ID')}`;
+            }
+
+            clearForm() {
+                document.getElementById('itemForm').reset();
+            }
+
+            saveToStorage() {
+                localStorage.setItem('schoolItems', JSON.stringify(this.items));
+            }
+
+            showMessage(message, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                    type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                } fade-in`;
+                messageDiv.textContent = message;
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        if (document.body.contains(messageDiv)) {
+                            document.body.removeChild(messageDiv);
+                        }
+                    }, 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the application
+        const inventory = new SchoolInventory();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ff637717e7a3ee',t:'MTc2MDY5OTgzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
